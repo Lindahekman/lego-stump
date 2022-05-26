@@ -1,0 +1,118 @@
+import * as PIXI from "pixi.js"
+import { HUB_COMMANDS } from "./stores/legohub"
+
+export interface CarRemoteData {
+    sprite: PIXI.Sprite
+    gridPosition: [number, number]
+    rotation: number
+}
+
+export const detectCommand = (clickPoint: PIXI.Point, car: CarRemoteData): HUB_COMMANDS | null => {
+    if (car.rotation != car.sprite.angle) return null
+    const carSprite = car.sprite
+    const carBounds = carSprite.getBounds()
+    let rotation = car.rotation
+    while (rotation < 0) {
+        rotation += 360
+    }
+    let forwardRect, backwardRect, leftRect, rightRect: PIXI.Rectangle
+    if (rotation % 360 == 0) {
+        forwardRect = new PIXI.Rectangle(
+            carBounds.left + (forwardXRel * carBounds.width), 
+            carBounds.top + (forwardYRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        backwardRect = new PIXI.Rectangle(
+            carBounds.left + (backwardXRel * carBounds.width),
+            carBounds.top + (backwardYRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        leftRect = new PIXI.Rectangle(
+            carBounds.left + (leftXRel * carBounds.width),
+            carBounds.top + (leftYRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        rightRect = new PIXI.Rectangle(
+            carBounds.left + (rightXRel * carBounds.width),
+            carBounds.top + (rightYRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+    } else if (rotation % 360 == 90) { // measuring from bottom of car
+        forwardRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (forwardYRel * carBounds.width) - (butHRel * carBounds.width), 
+            carBounds.top + (forwardXRel * carBounds.height),
+            butHRel * carBounds.width, butWRel * carBounds.height)
+        backwardRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (backwardYRel * carBounds.width) - (butHRel * carBounds.width),
+            carBounds.top + (backwardXRel * carBounds.height),
+            butHRel * carBounds.width, butWRel * carBounds.height)
+        leftRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (leftYRel * carBounds.width) - (butHRel * carBounds.width),
+            carBounds.top + (leftXRel * carBounds.height),
+            butHRel * carBounds.width, butWRel * carBounds.height)
+        rightRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (rightYRel * carBounds.width) - (butHRel * carBounds.width),
+            carBounds.top + (rightYRel * carBounds.height),
+            butHRel * carBounds.width, butWRel * carBounds.height)
+    } else if (rotation % 360 == 180) {
+        forwardRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (forwardXRel * carBounds.width) - (butWRel * carBounds.width), 
+            carBounds.top + carBounds.height - (forwardYRel * carBounds.height) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        backwardRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (backwardXRel * carBounds.width) - (butWRel * carBounds.width),
+            carBounds.top + carBounds.height - (backwardYRel * carBounds.height) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        leftRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (leftXRel * carBounds.width) - (butWRel * carBounds.width),
+            carBounds.top + carBounds.height - (leftYRel * carBounds.height) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        rightRect = new PIXI.Rectangle(
+            carBounds.left + carBounds.width - (rightXRel * carBounds.width) - (butWRel * carBounds.width),
+            carBounds.top + carBounds.height - (rightYRel * carBounds.height) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+    } else if (rotation % 360 == 270) {
+        forwardRect = new PIXI.Rectangle(
+            carBounds.left + (forwardYRel * carBounds.height), 
+            carBounds.top + carBounds.height - (forwardXRel * carBounds.width) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        backwardRect = new PIXI.Rectangle(
+            carBounds.left + (backwardYRel * carBounds.height),
+            carBounds.top + carBounds.height - (backwardXRel * carBounds.width) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        leftRect = new PIXI.Rectangle(
+            carBounds.left + (leftYRel * carBounds.height),
+            carBounds.top + carBounds.height - (leftXRel * carBounds.width) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+        rightRect = new PIXI.Rectangle(
+            carBounds.left + (rightYRel * carBounds.height),
+            carBounds.top + carBounds.height - (rightXRel * carBounds.width) - (butHRel * carBounds.height),
+            butWRel * carBounds.width, butHRel * carBounds.height)
+    } else {
+        return null
+    }
+    /* console.log("click point", clickPoint)
+    console.log("car bounds", carBounds)
+    console.log("rotation", rotation)
+    console.log("forward rect", forwardRect)
+    console.log("backward rect", backwardRect)
+    console.log("right rect", rightRect)
+    console.log("left rect", leftRect) */
+    if (forwardRect.contains(clickPoint.x, clickPoint.y)) {
+        return HUB_COMMANDS.FORWARD
+    } else if (backwardRect.contains(clickPoint.x, clickPoint.y)) {
+        return HUB_COMMANDS.BACKWARD
+    } else if (leftRect.contains(clickPoint.x, clickPoint.y)) {
+        return HUB_COMMANDS.LEFT
+    } else if (rightRect.contains(clickPoint.x, clickPoint.y)) {
+        return HUB_COMMANDS.RIGHT
+    }
+    return null
+}
+
+const butWRel = 372 / 1287
+const butHRel = 372 / 1515
+const forwardXRel = 450 / 1287
+const forwardYRel = 306 / 1515
+const backwardXRel = 450 / 1287
+const backwardYRel = 1034 / 1515
+const leftXRel = 248 / 1287
+const leftYRel = 678 / 1515
+const rightXRel = 660 / 1287
+const rightYRel = 678 / 1515
