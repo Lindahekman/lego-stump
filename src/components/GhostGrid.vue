@@ -38,7 +38,7 @@
 import { defineComponent } from 'vue'
 import * as PIXI from "pixi.js"
 import { sound } from '@pixi/sound';
-import carRemoteUrl from '@/assets/car-remote.png'
+import carRemoteUrl from '@/assets/car-remote-evolved.png'
 import carGhostUrl from '@/assets/car-ghost.png'
 import type { InteractionEvent } from 'pixi.js'
 import { HUB_COMMANDS, useLegoHubStore } from '@/stores/legohub'
@@ -98,6 +98,32 @@ export default defineComponent({
                 this.carGhost.gridPosition = [startPosition.slice()[0], startPosition.slice()[1]] // weird copying
                 this.carRemote.rotation = 90
                 this.carGhost.rotation = 90
+                this.legoHubStore.revertRotation = 0
+                this.legoHubStore.revertPosition = 0
+                return
+            }
+            if (state.revertRotation != 0) {
+                this.carRemote.rotation += state.revertRotation
+                this.legoHubStore.revertRotation = 0
+            }
+            if (state.revertPosition != 0) {
+                let rotation = this.carRemote.rotation
+                while (rotation < 0) {
+                    rotation += 360
+                }
+                rotation = rotation % 360
+                if (state.revertPosition > 0) {
+                    if (rotation == 0) this.carGhost.gridPosition[1]--
+                    else if (rotation == 90) this.carGhost.gridPosition[0]++
+                    else if (rotation == 180) this.carGhost.gridPosition[1]++
+                    else if (rotation == 270) this.carGhost.gridPosition[0]--
+                } else if (state.revertPosition < 0) {
+                    if (rotation == 0) this.carGhost.gridPosition[1]++
+                    else if (rotation == 90) this.carGhost.gridPosition[0]--
+                    else if (rotation == 180) this.carGhost.gridPosition[1]--
+                    else if (rotation == 270) this.carGhost.gridPosition[0]++
+                }
+                this.legoHubStore.revertPosition = 0
             }
         })
     },
@@ -227,6 +253,10 @@ export default defineComponent({
             } else if (cmd && cmd == HUB_COMMANDS.RIGHT) {
                 this.legoHubStore.addCommand({cmd: HUB_COMMANDS.RIGHT, rotationContext: this.carRemote.rotation})
                 this.carRemote.rotation += 90
+            } else if (cmd && cmd == HUB_COMMANDS.HORN) {
+                this.legoHubStore.addCommand({cmd: HUB_COMMANDS.HORN, rotationContext: this.carRemote.rotation})
+            } else if (cmd && cmd == HUB_COMMANDS.LIGHT) {
+                this.legoHubStore.addCommand({cmd: HUB_COMMANDS.LIGHT, rotationContext: this.carRemote.rotation})
             } else {
                 console.log("not detected")
             }

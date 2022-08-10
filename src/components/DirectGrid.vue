@@ -38,7 +38,7 @@
 import { defineComponent } from 'vue'
 import * as PIXI from "pixi.js"
 import { sound } from '@pixi/sound';
-import carRemoteUrl from '@/assets/car-remote.png'
+import carRemoteUrl from '@/assets/car-remote-evolved.png'
 import type { InteractionEvent } from 'pixi.js'
 import { HUB_COMMANDS, useLegoHubStore } from '@/stores/legohub'
 import type { CarRemoteData } from '@/remote-helpers'
@@ -197,6 +197,10 @@ export default defineComponent({
             } else if (cmd && cmd == HUB_COMMANDS.RIGHT) {
                 this.carRemote.rotation += 90
                 this.legoHubStore.addCommand({cmd: HUB_COMMANDS.RIGHT, rotationContext: this.carRemote.rotation})
+            } else if (cmd && cmd == HUB_COMMANDS.HORN) {
+                this.legoHubStore.addCommand({cmd: HUB_COMMANDS.HORN, rotationContext: this.carRemote.rotation})
+            } else if (cmd && cmd == HUB_COMMANDS.LIGHT) {
+                this.legoHubStore.addCommand({cmd: HUB_COMMANDS.LIGHT, rotationContext: this.carRemote.rotation})
             } else {
                 console.log("not detected")
             }

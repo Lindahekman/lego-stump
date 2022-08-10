@@ -43,6 +43,21 @@ export enum MSG_HUB_ATTACHED_IO_EVENT {
     ATTACHED_VIRTUAL = 0x02,
 }
 
+export enum COLORS {
+    // 0 = off, 1 = pink, 2 = purple, 3 = blue , 4 = lightblue, 5 = green, 6 = green2, 7 = yellow, 8 = orange, 9 = red, 10 = white
+    OFF = 0,
+    PINK = 1,
+    PURPLE = 2,
+    BLUE = 3,
+    LIGHTBLUE = 4,
+    LIGHTGREEN = 5,
+    GREEN = 6,
+    YELLOW = 7,
+    ORANGE = 8,
+    RED = 9,
+    WHITE = 10,
+}
+
 export interface MSG_HUB_ATTACHED_IO_PAYLOAD {
     port: number,
     event: MSG_HUB_ATTACHED_IO_EVENT,
@@ -88,6 +103,7 @@ export class Driver extends EventTarget {
     private hasMotorTwo: boolean
     private synchronizing: boolean
     private synchronized: number
+    private hasLED: boolean
     
     constructor(hub: BluetoothRemoteGATTCharacteristic) {
         super()
@@ -96,6 +112,7 @@ export class Driver extends EventTarget {
         this.hasMotorTwo = false
         this.synchronizing = false
         this.synchronized = -1
+        this.hasLED = false
     }
 
     public get ready() {
@@ -124,6 +141,11 @@ export class Driver extends EventTarget {
         this.writeMessage(msg)
     }
 
+    async showLight(colorNo: COLORS) {
+        const msg = Int8Array.of(HUB_ID, MESSAGE_TYPES.PORT_OUTPUT, 49, 0x00010000, 0x51, 0x00, colorNo)
+        this.writeMessage(msg)
+    }
+
     handlePortOutputFeedback(payload: MSG_PORT_OUTPUT_FEEDBACK_PAYLOAD): void {
         if (payload.port == this.synchronized && payload.status == MSG_PORT_OUTPUT_FEEDBACK_MSG.DONE) {
             console.log("motor action done", this.synchronized)
@@ -142,6 +164,9 @@ export class Driver extends EventTarget {
                     console.log("got synchronizing port", payload.port)
                     this.synchronized = payload.port
                     this.dispatchEvent(new Event("READY"))
+                    setTimeout(() => {
+                        this.showLight(COLORS.OFF)
+                    }, 1000)
                     return
                 } else {
                     console.log(payload)
@@ -152,9 +177,11 @@ export class Driver extends EventTarget {
         if (payload.event == MSG_HUB_ATTACHED_IO_EVENT.ATTACHED) {
             if (payload.port == 0) this.hasMotorOne = true
             if (payload.port == 1) this.hasMotorTwo = true
+            if (payload.port == 49) this.hasLED = true
         } else if (payload.event == MSG_HUB_ATTACHED_IO_EVENT.DETACHED) {
             if (payload.port == 0) this.hasMotorOne = false
             if (payload.port == 1) this.hasMotorTwo = false
+            if (payload.port == 50) this.hasLED = false
         }
         const nowReady = this.hasMotorOne && this.hasMotorTwo
         if (!wasReady && nowReady) {

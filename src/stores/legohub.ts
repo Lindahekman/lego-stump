@@ -1,5 +1,9 @@
 import { defineStore } from 'pinia'
 import * as Lego from '../lego-driver'
+import { sound } from '@pixi/sound';
+import hornUrl from '@/assets/horn.wav'
+
+sound.add('horn', hornUrl)
 
 export enum HUB_COMMANDS {
     LEFT = 1,
@@ -7,7 +11,9 @@ export enum HUB_COMMANDS {
     FORWARD = 3,
     BACKWARD = 4,
     NUDGE_FORWARD = 5,
-    NUDGE_BACKWARD = 6
+    NUDGE_BACKWARD = 6,
+    HORN = 7,
+    LIGHT = 8,
 }
 
 export interface HubCommand {
@@ -24,6 +30,9 @@ interface LegoHubStoreState {
     driveSpeed: number
     driveDegrees: number
     turnDegrees: number
+    revertRotation: number
+    revertPosition: number
+    lightOn: boolean
 }
 
 export const useLegoHubStore = defineStore('legohub', {
@@ -36,11 +45,22 @@ export const useLegoHubStore = defineStore('legohub', {
         driveSpeed: 20,
         driveDegrees: 360,
         turnDegrees: 180,
+        revertRotation: 0,
+        revertPosition: 0,
+        lightOn: false,
     }),
     getters: {
         hasHub: (state): boolean => state.hub != null
     },
     actions: {
+        async popCommand(): Promise<void> {
+            if (this.commands.length < 1) throw 'popCommand on empty commands list'
+            const lastCommand = this.commands.pop()
+            if (lastCommand?.cmd == HUB_COMMANDS.LEFT) this.revertRotation = 90
+            else if (lastCommand?.cmd == HUB_COMMANDS.RIGHT) this.revertRotation = -90
+            else if (lastCommand?.cmd == HUB_COMMANDS.BACKWARD) this.revertPosition = 1
+            else if (lastCommand?.cmd == HUB_COMMANDS.FORWARD) this.revertPosition = -1
+        },
         async clearCommands(): Promise<void> {
             this.commands = []
         },
@@ -66,6 +86,19 @@ export const useLegoHubStore = defineStore('legohub', {
                 this.hub.drive(this.driveDegrees / 3, -this.driveSpeed, this.driveSpeed)
             } else if (cmd == HUB_COMMANDS.NUDGE_BACKWARD) {
                 this.hub.drive(this.driveDegrees / 3, this.driveSpeed, -this.driveSpeed)
+            } else if (cmd == HUB_COMMANDS.HORN) {
+                sound.play('horn')
+                setTimeout(this.doneHandler, 1000)
+            } else if (cmd == HUB_COMMANDS.LIGHT) {
+                if (this.lightOn) {
+                    this.hub.showLight(Lego.COLORS.OFF)
+                    setTimeout(this.doneHandler, 1000)
+                    this.lightOn = false
+                } else {
+                    this.hub.showLight(Lego.COLORS.WHITE)
+                    setTimeout(this.doneHandler, 1000)
+                    this.lightOn = true
+                }
             }
         },
         async nextCommand(): Promise<void> {

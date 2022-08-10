@@ -33,11 +33,18 @@
     <v-main :class="legoHubStore.sequentialMode ? 'h-90' : 'h-100'" app>
       <router-view/>
     </v-main>
-    <v-app-bar position="bottom" v-if="legoHubStore.sequentialMode">
+    <v-app-bar position="bottom" v-if="legoHubStore.sequentialMode" class="py-2">
       <v-icon icon="mdi-human-queue"></v-icon>:
-      <v-icon class="ml-2 mr-2" v-for="(cmd, i) in legoHubStore.commands" :key="cmd.toString() + '-' + i" size="x-large" :style="`transform: rotate(${cmd.rotationContext}deg)`" :icon="cmd.cmd == HUB_COMMANDS.LEFT ? 'mdi-arrow-left-top' : cmd.cmd == HUB_COMMANDS.RIGHT ? 'mdi-arrow-right-top' : cmd.cmd == HUB_COMMANDS.FORWARD ? 'mdi-arrow-up' : 'mdi-arrow-down'"></v-icon>
-      <v-btn v-if="legoHubStore.commands.length > 0" variant="contained" color="error" class="ml-2 mr-2" size="large" @click="legoHubStore.clearCommands">
-        <v-icon icon="mdi-delete-forever" size="large"></v-icon>
+        <v-avatar
+            class="mx-1"
+            v-for="(cmd, i) in legoHubStore.commands" 
+            color="#58595b"
+            size="x-large"
+            :key="cmd.toString() + '-' + i">
+          <v-icon size="x-large" color="white" :icon="cmd.cmd == HUB_COMMANDS.LEFT ? 'mdi-arrow-left-top' : cmd.cmd == HUB_COMMANDS.RIGHT ? 'mdi-arrow-right-top' : cmd.cmd == HUB_COMMANDS.FORWARD ? 'mdi-arrow-up' : cmd.cmd == HUB_COMMANDS.BACKWARD ? 'mdi-arrow-down' : cmd.cmd == HUB_COMMANDS.HORN ? 'mdi-bullhorn-outline' : 'mdi-lightbulb-on-outline'" :style="`transform: rotate(${cmd.rotationContext}deg)`"></v-icon>
+        </v-avatar>
+      <v-btn v-if="legoHubStore.commands.length > 0" variant="contained" color="error" class="ml-2 mr-2" size="large" @click="legoHubStore.popCommand">
+        <v-icon icon="mdi-backspace" size="large"></v-icon>
       </v-btn>
       <v-btn v-if="legoHubStore.commands.length > 0" variant="contained" color="success" size="x-large" @click="legoHubStore.nextCommand">
         <v-icon icon="mdi-play" size="x-large"></v-icon>
@@ -104,4 +111,5 @@ export default defineComponent({
 .h-100 {
   max-height: 100vh !important;
 }
+
 </style>
